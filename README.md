@@ -9,6 +9,10 @@
   Speak in any language mix — text appears at your cursor. No cloud. No subscription.
 </p>
 
+<p align="center">
+  <a href="README.md">English</a> | <a href="README.zh-TW.md">繁體中文</a>
+</p>
+
 ---
 
 ## Why HushType
