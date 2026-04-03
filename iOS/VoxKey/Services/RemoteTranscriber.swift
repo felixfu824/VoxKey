@@ -7,28 +7,12 @@ struct TranscriptionResponse: Codable {
     let text: String
 }
 
-/// URLSession delegate that allows insecure HTTP connections (bypasses ATS)
-private class InsecureSessionDelegate: NSObject, URLSessionDelegate {
-    func urlSession(
-        _ session: URLSession,
-        didReceive challenge: URLAuthenticationChallenge,
-        completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
-    ) {
-        // Accept any server certificate (for local/Tailscale HTTP connections)
-        if let trust = challenge.protectionSpace.serverTrust {
-            completionHandler(.useCredential, URLCredential(trust: trust))
-        } else {
-            completionHandler(.performDefaultHandling, nil)
-        }
-    }
-}
-
 final class RemoteTranscriber {
 
     private let session: URLSession = {
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 30
-        return URLSession(configuration: config, delegate: InsecureSessionDelegate(), delegateQueue: nil)
+        return URLSession(configuration: config)
     }()
 
     var serverURL: URL {
