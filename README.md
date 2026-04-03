@@ -13,19 +13,35 @@
 
 ## Why HushType
 
-**The problem:** You think faster than you type, especially when switching between languages. Apple's built-in dictation only handles one language at a time — say a sentence mixing English and Mandarin, and it falls apart. Cloud-based alternatives send your voice to someone else's server, add latency, and cost money.
+**Private and secure by design.** Your voice never leaves your network. The
+speech model runs on your Mac's GPU — no cloud, no account, no data collection.
+iPhone audio travels to YOUR Mac over Tailscale (WireGuard-encrypted) or local
+WiFi. No third party ever touches your data.
 
-**The solution:** HushType runs a state-of-the-art multilingual speech model (Qwen3-ASR) entirely on your Mac's GPU. Your voice never leaves your machine. It handles code-switching between English, Chinese, and Japanese in the same sentence, and automatically outputs Traditional Chinese for Mandarin input.
+**Traditional Chinese that actually works.** OpenAI's Whisper only offers a
+single "zh" code — it defaults to Simplified with no reliable way to force
+Traditional. Open-source models often mix Simplified characters or use Mainland
+phrasing. HushType uses Qwen3-ASR for recognition, then OpenCC (s2twp) for
+consistent Traditional output with Taiwan-specific vocabulary (e.g., 軟體 not 软件).
 
-On macOS, it's a menu bar app — hold a key, speak, release, text appears. On iOS, it's a keyboard extension that sends audio to your Mac over your local network, so you get the same quality on your phone without any cloud service.
+**Multilingual code-switching.** Mix English and Mandarin in one sentence —
+HushType handles it in a single pass. Apple dictation requires manual language
+switching mid-sentence. Qwen3-ASR was trained for code-switching natively and
+is highly competitive with models 3x its size.
+
+**Lightweight.** ~675 MB storage, ~2.2 GB peak memory. Runs on any Apple Silicon
+Mac alongside your normal workload. ~1 second to transcribe 10 seconds of audio.
 
 ### Use Cases
 
-**Bilingual professional writing emails:**
-You're drafting a message that mixes English and Chinese. Instead of switching keyboards and typing in both languages, hold Right Option and say: "Please confirm the meeting time, 我們下週三下午兩點在台北市政府見面。" — the full sentence appears at your cursor, Chinese portions in Traditional Chinese.
+**Talking to AI agents:** Giving Claude or ChatGPT a detailed prompt takes 5
+minutes to type, 30 seconds to say. Tap mic on the HushType keyboard, speak
+your entire prompt (mixing languages as needed), tap stop — text appears in
+the chat input.
 
-**Voice notes on iPhone while commuting:**
-You're on the subway with your Mac at home. Open HushType on iPhone, tap "Start Listening," switch to Notes, and tap the mic in the HushType keyboard. Speak naturally in any language — your audio travels over Tailscale to your Mac, gets transcribed in ~1 second, and the text appears in Notes. No internet required beyond your Tailscale mesh.
+**Voice notes on the go:** On the subway, Mac at home. Tap "Start Listening"
+on iPhone, switch to Notes, tap mic. Audio travels over Tailscale to your Mac,
+transcribes in ~1 second, text appears.
 
 ---
 
@@ -354,7 +370,7 @@ lsof -ti :8000 :8199 | xargs kill
 - iOS requires Mac to be on and server running (no cloud fallback)
 - Free provisioning: iOS app expires every 7 days (re-sign via Xcode)
 - Session timeout is fixed at 5 minutes (no UI to change yet)
-- Mac must be on the same network as iPhone (WiFi or Tailscale)
+- Mac must be reachable from iPhone (same WiFi or Tailscale)
 
 ---
 
