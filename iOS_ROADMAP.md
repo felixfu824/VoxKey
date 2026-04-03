@@ -27,10 +27,53 @@ Porting VoxKey to iPhone is **technically feasible but architecturally different
 | [KeyboardKit](https://github.com/KeyboardKit/KeyboardKit) | Keyboard framework | Apple Speech (Pro only) | Yes (75 locales) | 1,800 | Active, paid |
 | [FUTO Voice Input](https://voiceinput.futo.org/) | Full voice keyboard | Whisper finetuned | Yes | N/A | **Android only** |
 
+### Typeless — The Market Leader
+
+[Typeless](https://www.typeless.com/) is the dominant commercial product in this space. "App of the Year 2026" — it's what sparked the wave of voice input tools.
+
+**Product:**
+- AI voice keyboard for iOS, Android, macOS, Windows
+- Speak naturally → polished, professional text (removes filler words, self-corrections, repetition; auto-formats lists)
+- "Speak to Edit" — select text and describe the change verbally
+- 100+ languages with auto-detection and mixed-language support
+- Works in every app: WhatsApp, Slack, email, ChatGPT, Notes, etc.
+
+**Pricing:**
+| Tier | Cost | Limit |
+|------|------|-------|
+| Free | $0 | 8,000 words/week (~32k/month) |
+| Pro (annual) | $12/month | Unlimited |
+| Pro (monthly) | $30/month | Unlimited |
+
+30-day Pro trial on signup.
+
+**Technical architecture:**
+- iOS: Keyboard extension + companion app (same "bounce to main app" pattern we identified)
+- STT: **Cloud-based Whisper API** (not on-device) — audio sent to server, transcribed, then LLM polishes the output
+- Privacy claim: "zero cloud data retention" — audio not stored after processing, not used for training
+- App size: 63.9 MB, requires iOS 16.1+
+- App Store: 4.6/5 rating, 272 ratings
+
+**How Typeless solves the iOS microphone problem:**
+Confirmed same architecture — keyboard extension opens companion app for recording, then passes result back. The UX is polished enough that users don't notice the app switch.
+
+**Key insight for VoxKey:** Typeless proves the "bounce to main app" UX can be made seamless enough for a mainstream product. It also shows the market values the **LLM polish layer** (removing filler words, formatting) as much as raw transcription accuracy. However, Typeless is **cloud-dependent** — this is VoxKey's potential differentiator: fully on-device, zero network requirement.
+
+### OpenTypeless — Open-Source Typeless Clone
+
+[OpenTypeless](https://www.opentypeless.com/en) ([GitHub](https://github.com/tover0314-w/opentypeless), MIT license)
+
+- **Desktop only** (macOS/Windows/Linux via Tauri/Rust) — no iOS
+- BYOK model: 6 STT providers (Deepgram, AssemblyAI, OpenAI Whisper, Groq Whisper, GLM-ASR, SiliconFlow) + 11 LLM providers for polish
+- 99 languages, Chinese supported
+- Free forever, fully open source
+- Same global-hotkey → transcribe → polish → paste-at-cursor flow as VoxKey macOS
+- Not relevant for iOS port, but validates that the open-source market is active
+
 ### Key finding
 
-**TypeWhisper iOS is the only open-source project with a working iOS keyboard extension for voice-to-text.** It's very new (5 stars, beta) but validates the architecture. All other projects are either libraries (you build on top) or standalone apps (no keyboard integration).
-(Felix: should check TypeLess)
+**TypeWhisper iOS is the only open-source project with a working iOS keyboard extension for voice-to-text.** Typeless is the commercial market leader that proved the UX pattern works at scale. VoxKey iOS's differentiator would be **fully on-device inference** (vs. Typeless's cloud Whisper) and **native Traditional Chinese** (vs. Typeless's generic multilingual).
+
 ---
 
 ## The Fundamental iOS Constraint
