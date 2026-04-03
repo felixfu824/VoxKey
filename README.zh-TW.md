@@ -63,17 +63,30 @@ iOS（透過你的 Mac 作為伺服器）：
 
 ---
 
-## 前置需求
+## 前置需求與相依套件
+
+**硬體與系統：**
 
 | 需求 | 用途 |
 |---|---|
 | Apple Silicon Mac（M1 以上）| MLX 推論需要 Metal GPU |
 | macOS 15.0+ | speech-swift 最低版本需求 |
-| Homebrew | 安裝 opencc 及其他相依套件 |
-| Python 3.13+ | 僅 iOS 伺服器需要（純 macOS 使用不需要）|
-| Xcode 16+ | 編譯 iOS App（純 macOS 使用不需要）|
 | iPhone（iOS 17+）| iOS 客戶端（選用）|
-| Tailscale | 隨處皆可連線的 iPhone-to-Mac 連線（選用——區域網路也可以）|
+
+**軟體相依套件：**
+
+| 套件 | 用途 | 安裝方式 | 需要於 |
+|---|---|---|---|
+| [Homebrew](https://brew.sh) | 套件管理器 | 見 brew.sh | 兩者皆需 |
+| [opencc](https://formulae.brew.sh/formula/opencc) | 簡體 → 繁體中文 | `brew install opencc` | 兩者皆需 |
+| [speech-swift](https://github.com/soniqo/speech-swift) | Apple Silicon 上的 Qwen3-ASR（MLX）| SPM 自動安裝 | macOS |
+| [Python 3.13+](https://python.org) | iOS 伺服器執行環境 | `brew install python` | 僅 iOS |
+| [mlx-audio](https://github.com/Blaizzy/mlx-audio) | iOS 用的 STT 伺服器 | `pip3 install "mlx-audio[stt,server]"` | 僅 iOS |
+| [httpx](https://www.python-httpx.org/) | 代理伺服器用的非同步 HTTP | `pip3 install httpx` | 僅 iOS |
+| webrtcvad-wheels, setuptools | mlx-audio 執行相依 | `pip3 install webrtcvad-wheels setuptools` | 僅 iOS |
+| [xcodegen](https://github.com/yonaskolb/XcodeGen) | iOS Xcode 專案產生器 | `brew install xcodegen` | 僅 iOS |
+| [Xcode 16+](https://developer.apple.com/xcode/) | 編譯 iOS App | Mac App Store | 僅 iOS |
+| [Tailscale](https://tailscale.com) | 加密的 iPhone-to-Mac 連線 | 見 tailscale.com | 選用 |
 
 ---
 
@@ -302,14 +315,3 @@ lsof -ti :8000 :8199 | xargs kill
 - 聆聽時間固定為 5 分鐘（尚無介面可調整）
 - Mac 必須是 iPhone 可連線的（同一 WiFi 或 Tailscale）
 
----
-
-## 相依套件
-
-| 套件 | 用途 | 安裝方式 |
-|---|---|---|
-| [speech-swift](https://github.com/soniqo/speech-swift) | Apple Silicon 上的 Qwen3-ASR（MLX）| SPM 自動安裝 |
-| [opencc](https://formulae.brew.sh/formula/opencc) | 簡體 → 繁體中文 | `brew install opencc` |
-| [mlx-audio](https://github.com/Blaizzy/mlx-audio) | iOS 用的 STT 伺服器 | `pip3 install "mlx-audio[stt,server]"` |
-| [xcodegen](https://github.com/yonaskolb/XcodeGen) | iOS Xcode 專案產生器 | `brew install xcodegen` |
-| [httpx](https://www.python-httpx.org/) | 代理伺服器用的非同步 HTTP | `pip3 install httpx` |

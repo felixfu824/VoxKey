@@ -79,17 +79,30 @@ iOS (via your Mac as server):
 
 ---
 
-## Prerequisites
+## Prerequisites and Dependencies
+
+**Hardware and OS:**
 
 | Requirement | Purpose |
 |---|---|
 | Mac with Apple Silicon (M1+) | MLX inference requires Metal GPU |
 | macOS 15.0+ | Minimum OS for speech-swift |
-| Homebrew | Installing opencc and other dependencies |
-| Python 3.13+ | iOS server only (not needed for macOS-only use) |
-| Xcode 16+ | Building the iOS app (not needed for macOS-only use) |
 | iPhone with iOS 17+ | iOS client (optional) |
-| Tailscale | iPhone-to-Mac connectivity from anywhere (optional — LAN also works) |
+
+**Software dependencies:**
+
+| Dependency | Purpose | Install | Required for |
+|---|---|---|---|
+| [Homebrew](https://brew.sh) | Package manager | See brew.sh | Both |
+| [opencc](https://formulae.brew.sh/formula/opencc) | Simplified → Traditional Chinese | `brew install opencc` | Both |
+| [speech-swift](https://github.com/soniqo/speech-swift) | Qwen3-ASR on Apple Silicon (MLX) | Automatic via SPM | macOS |
+| [Python 3.13+](https://python.org) | iOS server runtime | `brew install python` | iOS only |
+| [mlx-audio](https://github.com/Blaizzy/mlx-audio) | STT server for iOS | `pip3 install "mlx-audio[stt,server]"` | iOS only |
+| [httpx](https://www.python-httpx.org/) | Async HTTP for proxy server | `pip3 install httpx` | iOS only |
+| webrtcvad-wheels, setuptools | mlx-audio runtime deps | `pip3 install webrtcvad-wheels setuptools` | iOS only |
+| [xcodegen](https://github.com/yonaskolb/XcodeGen) | iOS Xcode project generation | `brew install xcodegen` | iOS only |
+| [Xcode 16+](https://developer.apple.com/xcode/) | Building the iOS app | Mac App Store | iOS only |
+| [Tailscale](https://tailscale.com) | Encrypted iPhone-to-Mac from anywhere | See tailscale.com | Optional |
 
 ---
 
@@ -376,14 +389,3 @@ lsof -ti :8000 :8199 | xargs kill
 - Session timeout is fixed at 5 minutes (no UI to change yet)
 - Mac must be reachable from iPhone (same WiFi or Tailscale)
 
----
-
-## Dependencies
-
-| Dependency | Purpose | Install |
-|---|---|---|
-| [speech-swift](https://github.com/soniqo/speech-swift) | Qwen3-ASR on Apple Silicon (MLX) | Automatic via SPM |
-| [opencc](https://formulae.brew.sh/formula/opencc) | Simplified → Traditional Chinese | `brew install opencc` |
-| [mlx-audio](https://github.com/Blaizzy/mlx-audio) | STT server for iOS | `pip3 install "mlx-audio[stt,server]"` |
-| [xcodegen](https://github.com/yonaskolb/XcodeGen) | iOS Xcode project generation | `brew install xcodegen` |
-| [httpx](https://www.python-httpx.org/) | Async HTTP for proxy server | `pip3 install httpx` |
