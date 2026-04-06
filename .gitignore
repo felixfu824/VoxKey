@@ -12,6 +12,7 @@ xcuserdata/
 
 # Local docs (not for public repo)
 HANDOVER.md
+CLAUDE.md
 
 # DMG builds (local distribution only)
 *.dmg
