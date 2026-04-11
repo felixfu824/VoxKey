@@ -172,8 +172,36 @@ make install
 - **選單列圖示** — 顯示狀態（閒置 / 錄音中 / 轉錄中）
 - **選單列 > Language** — 切換 Auto / English / 中文 / 日本語
 - **選單列 > Show Floating Indicator** — 切換底部浮動指示條（預設開啟）
+- **選單列 > AI Cleanup** — 透過 Apple Foundation Models 的選用後處理（需要 macOS 26+）。詳見下方。
 
 macOS 到此結束。不需要伺服器、不需要網路、不需要設定。
+
+### 選用功能：AI Cleanup（beta，macOS 26+）
+
+HushType v0.3 新增了一個 opt-in 的 AI Cleanup 後處理流程，使用 Apple 裝置內建的 Foundation Models 框架清理每一段轉錄文字。啟用後，LLM 會做三件事：
+
+1. **句子層級清理** — 刪除句首贅字（`um`、`uh`、`hmm`、嗯、啊、那個、就是…）並收縮連續重複（`I I I think` → `I think`、`我我我覺得` → `我覺得`）。保留強調式重複（`對對對`、`yes yes yes`）。
+2. **自我修正解析** — 當你在句中明確更正自己（使用 `no actually`、`I mean`、不對、我是說、應該是 等標記），只保留修正後的版本。`I'll send it Wednesday no actually Friday` → `I'll send it Friday`。`我想約禮拜三不對禮拜五` → `我想約禮拜五`。
+3. **中文數字轉換** — 將中文數字轉成阿拉伯數字：`一零一大樓` → `101 大樓`、`三本書` → `3 本書`、`三點一四` → `3.14`。保留固定詞（`想一下`、`一直`、`一些`）。
+
+**需求：**
+- macOS 26（Tahoe）或更新版本
+- 系統設定中已啟用 Apple Intelligence（on-device 模型必須可用）
+- Apple Silicon Mac
+
+**如何啟用：**
+1. 選單列 → 點 HushType 圖示 → 點 **AI Cleanup**
+2. HushType 會對 on-device 模型執行一次快速 round-trip 測試。如果 Apple Intelligence 不可用，會顯示錯誤說明原因。
+3. 成功後會出現勾勾，之後的轉錄都會自動清理。
+4. 隨時可以關掉 — 選單項目會乾淨地切回只有 OpenCC 的原始流程。
+
+**失敗處理**：如果 on-device 模型在轉錄途中出錯（safety filter 觸發、暫時性問題），HushType 會靜默回退到未清理的文字。你不會看到壞掉的轉錄結果，最糟的情況只是這一次沒清理。
+
+**已知限制（beta）：**
+- 偶爾會過度修剪中文副詞（例：`我一直都在` 可能變成 `我一直在`）。
+- 自我修正解析後，尾部助詞可能殘留（`禮拜三哦不對禮拜五` → `禮拜五哦`）。
+- 中文語境下的英文數字會被轉換（`我買了 five 本書` → `我買了 5 本書`）。這是產品接受的行為。
+- 語言覆蓋主要驗證中文與英文，日文測試有限。
 
 ---
 

@@ -190,8 +190,36 @@ make install
 - **Menu bar icon** — shows status (idle / recording / transcribing)
 - **Menu bar > Language** — switch between Auto / English / Chinese / Japanese
 - **Menu bar > Show Floating Indicator** — toggle the bottom-of-screen pill (default on)
+- **Menu bar > AI Cleanup** — optional post-processing via Apple Foundation Models (requires macOS 26+). See below.
 
 That's it for macOS. No server, no network, no configuration needed.
+
+### Optional: AI Cleanup (beta, macOS 26+)
+
+HushType v0.3 adds an opt-in AI Cleanup pass that runs each transcription through Apple's on-device Foundation Models framework. When enabled, the LLM does three things:
+
+1. **Sentence-level cleanup** — removes leading filler words (`um`, `uh`, `hmm`, 嗯, 啊, 那個, 就是…) and collapses immediate duplicates (`I I I think` → `I think`, `我我我覺得` → `我覺得`). Leaves emphatic repetitions alone (`對對對`, `yes yes yes`).
+2. **Speaker self-correction resolution** — when you correct yourself mid-sentence with an explicit marker (`no actually`, `I mean`, `不對`, `我是說`, `應該是`), it keeps only the corrected version. `I'll send it Wednesday no actually Friday` → `I'll send it Friday`. `我想約禮拜三不對禮拜五` → `我想約禮拜五`.
+3. **Chinese numeral conversion** — converts Chinese numerals to Arabic digits in context: `一零一大樓` → `101 大樓`, `三本書` → `3 本書`, `三點一四` → `3.14`. Leaves fixed phrases alone (`想一下`, `一直`, `一些`).
+
+**Requirements:**
+- macOS 26 (Tahoe) or later
+- Apple Intelligence enabled in System Settings (the on-device model must be available)
+- Apple Silicon Mac
+
+**How to enable:**
+1. Menu bar → click the HushType icon → click **AI Cleanup**
+2. HushType runs a quick round-trip test against the on-device model. If Apple Intelligence isn't available, you'll see an error explaining why.
+3. On success, the checkmark appears and future transcriptions are cleaned up automatically.
+4. Toggle off any time — the menu item flips cleanly back to the raw OpenCC-only pipeline.
+
+**Failure mode:** if the on-device model errors mid-transcription (safety filter, transient issue), HushType silently falls back to the uncleaned text. You never see a broken transcription; the worst case is no cleanup on that one call.
+
+**Known limitations (beta):**
+- Occasional over-pruning of Chinese adverbs (e.g., `我一直都在` may become `我一直在`).
+- Trailing particles may leak through after self-correction resolution (`禮拜三哦不對禮拜五` → `禮拜五哦`).
+- English numerals inside Chinese context get converted (`我買了 five 本書` → `我買了 5 本書`). Product-accepted behavior.
+- Language coverage is primarily validated on Chinese and English. Japanese input is tested minimally.
 
 ---
 
@@ -331,6 +359,11 @@ defaults write com.felix.hushtype hushtype.chineseConversionEnabled -bool false
 
 # Floating "Listening / Transcribing" indicator (default: true)
 defaults write com.felix.hushtype hushtype.floatingOverlayEnabled -bool false
+
+# AI Cleanup via Apple Foundation Models (default: false, requires macOS 26+)
+# Prefer toggling from the menu bar — the menu validates FoundationModels
+# availability and shows a clear error if Apple Intelligence isn't enabled.
+defaults write com.felix.hushtype hushtype.aiCleanupEnabled -bool true
 ```
 
 ### iOS
@@ -370,6 +403,9 @@ HushType/
 │   ├── InputSourceManager.swift       CJK input method detection
 │   ├── FloatingOverlayWindow.swift    Borderless NSPanel for the listening pill
 │   ├── FloatingOverlayView.swift      SwiftUI pill: RMS bars + transcribing spinner
+│   ├── AICleaner.swift                Non-gated façade over FoundationModels cleanup
+│   ├── FoundationModelsCleaner.swift  macOS 26+ gated Apple FM wrapper
+│   ├── CleanupPrompt.swift            Locked Path C hybrid system prompt
 │   └── AppConfig.swift                UserDefaults wrapper
 ├── scripts/
 │   ├── ios_server.py                  FastAPI proxy: mlx-audio + OpenCC
