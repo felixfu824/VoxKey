@@ -12,6 +12,7 @@ final class AppConfig {
         static let language = "hushtype.language"
         static let modelId = "hushtype.modelId"
         static let chineseConversionEnabled = "hushtype.chineseConversionEnabled"
+        static let floatingOverlayEnabled = "hushtype.floatingOverlayEnabled"
     }
 
     /// Language for transcription. nil = auto-detect.
@@ -38,6 +39,21 @@ final class AppConfig {
             return defaults.bool(forKey: Keys.chineseConversionEnabled)
         }
         set { defaults.set(newValue, forKey: Keys.chineseConversionEnabled) }
+    }
+
+    /// Whether to show the floating "Listening / Transcribing" overlay
+    /// near the bottom of the screen during dictation.
+    var floatingOverlayEnabled: Bool {
+        get {
+            if defaults.object(forKey: Keys.floatingOverlayEnabled) == nil {
+                return true // Default: enabled
+            }
+            return defaults.bool(forKey: Keys.floatingOverlayEnabled)
+        }
+        set {
+            defaults.set(newValue, forKey: Keys.floatingOverlayEnabled)
+            log.info("Floating overlay enabled: \(newValue, privacy: .public)")
+        }
     }
 
     private init() {}

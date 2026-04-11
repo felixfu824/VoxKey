@@ -23,6 +23,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var audioCapture: AudioCaptureService!
     private var transcriptionEngine: Qwen3TranscriptionEngine!
 
+    // Floating overlay (created lazily on first use)
+    private let overlayState = OverlayStateModel()
+    private lazy var overlayWindow = FloatingOverlayWindow(stateModel: overlayState)
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         print("[HushType] Starting...")
 
@@ -39,9 +43,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.handleHotkeyRelease()
         }
 
+        // RMS callback fires on the CoreAudio IO thread — must hop to main
+        // before touching @Published state on the overlay model.
+        audioCapture.onRMSLevel = { [weak self] level in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                if case .recording = self.overlayState.state {
+                    self.overlayState.state = .recording(level: level)
+                }
+            }
+        }
+
         // Wire quit
         statusBar.onQuit = { [weak self] in
             self?.hotkeyManager.stop()
+            self?.hideOverlay()
         }
 
         // Start hotkey listener
@@ -73,7 +89,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         hotkeyManager.stop()
+        hideOverlay()
         log.info("HushType terminated")
+    }
+
+    // MARK: - Overlay helpers
+
+    private func showOverlayRecording() {
+        guard AppConfig.shared.floatingOverlayEnabled else { return }
+        overlayState.state = .recording(level: 0)
+        overlayWindow.show()
+    }
+
+    private func switchOverlayToTranscribing() {
+        guard AppConfig.shared.floatingOverlayEnabled else { return }
+        // Window stays visible; only the inner state changes.
+        overlayState.state = .transcribing
+    }
+
+    private func hideOverlay() {
+        overlayWindow.hide()
+        overlayState.state = .hidden
     }
 
     // MARK: - Hotkey Handlers
@@ -91,6 +127,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         state = .recording
         statusBar.setState(.recording)
+        showOverlayRecording()
         audioCapture.startRecording()
         print("[HushType] Recording started...")
     }
@@ -109,11 +146,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             print("[HushType] Too short, skipping")
             state = .idle
             statusBar.setState(.idle)
+            hideOverlay()
             return
         }
 
         state = .transcribing
         statusBar.setState(.transcribing)
+        switchOverlayToTranscribing()
         print("[HushType] Transcribing...")
 
         let language = AppConfig.shared.language
@@ -131,6 +170,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     print("[HushType] Empty transcription, skipping insert")
                     self?.state = .idle
                     self?.statusBar.setState(.idle)
+                    self?.hideOverlay()
                     return
                 }
 
@@ -139,6 +179,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 TextInserter.insert(text)
                 self.state = .idle
                 self.statusBar.setState(.idle)
+                self.hideOverlay()
                 print("[HushType] Done")
             }
         }

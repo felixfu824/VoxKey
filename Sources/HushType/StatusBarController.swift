@@ -17,6 +17,7 @@ final class StatusBarController: NSObject {
     private let languageMenu: NSMenu
     private var languageItems: [NSMenuItem] = []
     private var iosServerMenuItem: NSMenuItem!
+    private var floatingOverlayMenuItem: NSMenuItem!
     let iosServerManager = IOSServerManager()
 
     var onLanguageChanged: ((String?) -> Void)?
@@ -89,6 +90,18 @@ final class StatusBarController: NSObject {
 
         menu.addItem(.separator())
 
+        // Floating overlay toggle
+        floatingOverlayMenuItem = NSMenuItem(
+            title: "Show Floating Indicator",
+            action: #selector(toggleFloatingOverlay),
+            keyEquivalent: ""
+        )
+        floatingOverlayMenuItem.target = self
+        floatingOverlayMenuItem.state = AppConfig.shared.floatingOverlayEnabled ? .on : .off
+        menu.addItem(floatingOverlayMenuItem)
+
+        menu.addItem(.separator())
+
         // About
         let aboutItem = NSMenuItem(title: "About HushType", action: #selector(aboutClicked), keyEquivalent: "")
         aboutItem.target = self
@@ -116,6 +129,12 @@ final class StatusBarController: NSObject {
         } else {
             iosServerManager.start(port: 8000)
         }
+    }
+
+    @objc private func toggleFloatingOverlay() {
+        let newValue = !AppConfig.shared.floatingOverlayEnabled
+        AppConfig.shared.floatingOverlayEnabled = newValue
+        floatingOverlayMenuItem.state = newValue ? .on : .off
     }
 
     @objc private func aboutClicked() {
