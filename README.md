@@ -152,16 +152,19 @@ make install
 ### Step 2: Launch and grant permissions
 
 1. Launch HushType from Spotlight (Cmd+Space → HushType)
-2. Grant **Accessibility** permission when prompted (System Settings > Privacy & Security > Accessibility > add HushType)
-3. Grant **Microphone** permission when prompted
-4. Wait for the model to download (~675 MB, one-time, progress shown in menu bar)
+2. On first launch, a **welcome modal** explains the permissions HushType needs. Click **Get Started**.
+3. System Settings opens automatically to the Accessibility pane. Find HushType in the list and **toggle it on**.
+4. Grant the **Microphone** permission when the system prompts for it.
+5. Return to HushType's follow-up modal and click **Restart HushType** — the app relaunches itself with the new permissions active. (macOS caches the permission check per-process, so a restart is mandatory after granting — HushType handles it for you.)
+6. Wait for the model to download (~675 MB, one-time, progress shown in menu bar)
 
 ### Step 3: Use it
 
-- **Hold Right Option** — start recording (menu bar icon changes)
-- **Release** — transcribe and paste at cursor
+- **Hold Right Option** — start recording. A translucent "Listening" pill appears at the bottom of the screen with a live audio level meter.
+- **Release** — the pill switches to a pulsing "Transcribing" state while ASR runs, then the transcribed text is pasted at your cursor and also left on the clipboard for re-pasting.
 - **Menu bar icon** — shows status (idle / recording / transcribing)
 - **Menu bar > Language** — switch between Auto / English / Chinese / Japanese
+- **Menu bar > Show Floating Indicator** — toggle the bottom-of-screen pill (default on)
 
 That's it for macOS. No server, no network, no configuration needed.
 
@@ -300,6 +303,9 @@ defaults write com.felix.hushtype hushtype.modelId -string "mlx-community/Qwen3-
 
 # Traditional Chinese conversion (default: true)
 defaults write com.felix.hushtype hushtype.chineseConversionEnabled -bool false
+
+# Floating "Listening / Transcribing" indicator (default: true)
+defaults write com.felix.hushtype hushtype.floatingOverlayEnabled -bool false
 ```
 
 ### iOS
@@ -310,7 +316,7 @@ defaults write com.felix.hushtype hushtype.chineseConversionEnabled -bool false
 
 ### Changing the Hotkey (macOS)
 
-Edit `Sources/VoxKey/HotkeyManager.swift`:
+Edit `Sources/HushType/HotkeyManager.swift`:
 ```swift
 private static let rightOptionKeyCode: Int64 = 61
 ```
@@ -324,18 +330,21 @@ Common keycodes: Right Option (61), Right Command (54), Left Option (58), Left C
 ```
 HushType/
 ├── Package.swift                      SPM config (macOS target)
-├── Makefile                           build / install / clean
-├── Sources/VoxKey/                    macOS menu bar app
+├── Makefile                           build / install / clean / dmg
+├── Sources/HushType/                  macOS menu bar app
 │   ├── main.swift                     NSApplication bootstrap
 │   ├── AppDelegate.swift              Orchestrator + state machine
 │   ├── StatusBarController.swift      Menu bar icon + menus + iOS server toggle
 │   ├── IOSServerManager.swift         Manages ios_server.py subprocess
+│   ├── OnboardingManager.swift        First-launch welcome + permission flow + auto-restart
 │   ├── HotkeyManager.swift            CGEvent tap for Right Option
-│   ├── AudioCaptureService.swift      AVAudioEngine mic capture (16kHz mono)
+│   ├── AudioCaptureService.swift      AVAudioEngine mic capture (16kHz mono, RMS publisher)
 │   ├── TranscriptionEngine.swift      Protocol + Qwen3ASR wrapper (MLX)
 │   ├── ChineseConverter.swift         OpenCC s2twp (Simplified → Traditional)
-│   ├── TextInserter.swift             Clipboard + Cmd+V paste
+│   ├── TextInserter.swift             Clipboard + Cmd+V paste (result persists on clipboard)
 │   ├── InputSourceManager.swift       CJK input method detection
+│   ├── FloatingOverlayWindow.swift    Borderless NSPanel for the listening pill
+│   ├── FloatingOverlayView.swift      SwiftUI pill: RMS bars + transcribing spinner
 │   └── AppConfig.swift                UserDefaults wrapper
 ├── scripts/
 │   ├── ios_server.py                  FastAPI proxy: mlx-audio + OpenCC
@@ -370,10 +379,10 @@ To run HushType on your own devices, change these:
 |---|---|---|
 | Bundle ID | `iOS/project.yml` (both targets) + `iOS/Shared/AppGroupConstants.swift` | `com.yourname.hushtype` / `group.com.yourname.hushtype` |
 | Server URL default | `iOS/VoxKey/Views/ContentView.swift` | Your Tailscale or LAN IP |
-| Hotkey | `Sources/VoxKey/HotkeyManager.swift` | Any modifier keycode |
+| Hotkey | `Sources/HushType/HotkeyManager.swift` | Any modifier keycode |
 | Model | `iOS/VoxKey/Services/RemoteTranscriber.swift` + `scripts/ios_server.py` | `mlx-community/Qwen3-ASR-1.7B-8bit` for better quality |
 | Session timeout | `iOS/VoxKey/Services/BackgroundAudioManager.swift` | `sessionDuration` property |
-| OpenCC config | `Sources/VoxKey/ChineseConverter.swift` + `scripts/ios_server.py` | Change `s2twp` to `s2t` for standard Traditional |
+| OpenCC config | `Sources/HushType/ChineseConverter.swift` + `scripts/ios_server.py` | Change `s2twp` to `s2t` for standard Traditional |
 
 ---
 
@@ -383,7 +392,7 @@ To run HushType on your own devices, change these:
 Run: `bash scripts/build_mlx_metallib.sh release`
 
 **macOS: Hotkey not working**
-Check Accessibility permission. HushType (or Terminal if running via `make run`) must be listed.
+Check Accessibility permission in System Settings → Privacy & Security → Accessibility. HushType must be in the list and toggled on. If you just granted it and the hotkey still doesn't work, quit and relaunch HushType — macOS caches the permission check per-process, so a restart is mandatory after granting. The first-launch onboarding flow handles this automatically, but if you reach this state some other way, you'll need to restart manually.
 
 **iOS: "App Transport Security" error**
 The Info.plist must have `NSAllowsArbitraryLoads = true` with NO `NSExceptionDomains` — they conflict and cause iOS to ignore the global allow.

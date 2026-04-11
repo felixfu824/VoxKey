@@ -134,16 +134,19 @@ make install
 ### 步驟 2：啟動並授予權限
 
 1. 從 Spotlight 啟動 HushType（Cmd+Space → HushType）
-2. 授予**輔助使用**權限（系統設定 > 隱私權與安全性 > 輔助使用 > 加入 HushType）
-3. 授予**麥克風**權限
-4. 等待模型下載（約 675 MB，僅首次，進度顯示在選單列）
+2. 首次啟動時會跳出**歡迎視窗**，說明 HushType 需要的權限。點擊 **Get Started**。
+3. 系統設定會自動打開到輔助使用頁面。在清單中找到 HushType 並**開啟開關**。
+4. 當系統要求麥克風權限時，點擊**允許**。
+5. 回到 HushType 的後續視窗，點擊 **Restart HushType** — App 會自動重新啟動，讓新授予的權限生效。（macOS 會在 process 層級快取權限檢查結果，所以授予權限後必須重啟 — HushType 會幫你處理這個步驟。）
+6. 等待模型下載（約 675 MB，僅首次，進度顯示在選單列）
 
 ### 步驟 3：使用
 
-- **按住 Right Option** — 開始錄音（選單列圖示會變化）
-- **放開** — 轉錄並貼上到游標位置
+- **按住 Right Option** — 開始錄音。螢幕底部會出現一個半透明的「Listening」指示條，顯示即時的音量條。
+- **放開** — 指示條切換為脈動的「Transcribing」狀態，語音辨識完成後，文字貼到游標位置，同時也保留在剪貼簿中可再次貼上。
 - **選單列圖示** — 顯示狀態（閒置 / 錄音中 / 轉錄中）
 - **選單列 > Language** — 切換 Auto / English / 中文 / 日本語
+- **選單列 > Show Floating Indicator** — 切換底部浮動指示條（預設開啟）
 
 macOS 到此結束。不需要伺服器、不需要網路、不需要設定。
 
@@ -282,6 +285,9 @@ defaults write com.felix.hushtype hushtype.modelId -string "mlx-community/Qwen3-
 
 # 繁體中文轉換（預設：true）
 defaults write com.felix.hushtype hushtype.chineseConversionEnabled -bool false
+
+# 底部浮動「Listening / Transcribing」指示條（預設：true）
+defaults write com.felix.hushtype hushtype.floatingOverlayEnabled -bool false
 ```
 
 ### iOS
@@ -292,7 +298,7 @@ defaults write com.felix.hushtype hushtype.chineseConversionEnabled -bool false
 
 ### 更改快捷鍵（macOS）
 
-編輯 `Sources/VoxKey/HotkeyManager.swift`：
+編輯 `Sources/HushType/HotkeyManager.swift`：
 ```swift
 private static let rightOptionKeyCode: Int64 = 61
 ```
@@ -307,7 +313,7 @@ private static let rightOptionKeyCode: Int64 = 61
 執行：`bash scripts/build_mlx_metallib.sh release`
 
 **macOS：快捷鍵沒反應**
-檢查輔助使用權限。HushType（或用 `make run` 啟動時的終端機）必須在清單中。
+檢查系統設定 → 隱私權與安全性 → 輔助使用。HushType 必須在清單中且開關要打開。如果你剛授予權限但快捷鍵仍然沒反應，請退出並重新啟動 HushType — macOS 會在 process 層級快取權限檢查結果，授予權限後必須重啟才會生效。首次啟動的 onboarding 流程會自動處理這個步驟，但如果你是透過其他方式到達這個狀態，就需要手動重啟。
 
 **iOS：「App Transport Security」錯誤**
 Info.plist 中必須有 `NSAllowsArbitraryLoads = true`，且**不能**同時有 `NSExceptionDomains`——兩者衝突時 iOS 會忽略全域允許。

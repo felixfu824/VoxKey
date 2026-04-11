@@ -69,13 +69,15 @@ make install
 open /Applications/HushType.app
 ```
 
-9. **Ask the user to do these manually** (cannot be automated):
-   - A dialog will ask for Accessibility permission. Tell the user: "Go to System Settings > Privacy & Security > Accessibility, and make sure HushType is checked."
-   - A dialog will ask for Microphone permission. Tell the user: "Click Allow."
-   - Wait for the model to download (progress shows in the menu bar). Tell the user: "Wait until the menu bar shows 'Ready'."
+9. **Walk the user through the onboarding flow** (this is mostly automated by HushType v0.2.3+):
+   - On first launch, HushType shows a "Welcome to HushType" modal explaining what permissions it needs. Tell the user: "Click **Get Started** in the welcome dialog."
+   - System Settings will open automatically to the Accessibility pane. Tell the user: "Find HushType in the list and toggle it on."
+   - A macOS microphone permission prompt may appear. Tell the user: "Click Allow."
+   - HushType will then show a "Grant Accessibility Permission" modal with a **Restart HushType** button. Tell the user: "Click **Restart HushType** — this will automatically relaunch HushType with the new permissions."
+   - After the restart, the menu bar icon will appear. Wait for the model to download. Tell the user: "Wait until the menu bar shows 'Ready' (first download is ~675 MB, one-time)."
 
 10. Test it:
-    - Tell the user: "Hold down the Right Option key (the Option key on the right side of your keyboard), say something, then release the key. The text should appear where your cursor is."
+    - Tell the user: "Hold down the Right Option key (the Option key on the right side of your keyboard), say something, then release the key. You should see a translucent 'Listening' pill appear at the bottom of the screen with a live audio meter, then it switches to 'Transcribing', then the text appears at your cursor."
 
 **macOS setup is now complete.** If the user only wants macOS, stop here.
 
